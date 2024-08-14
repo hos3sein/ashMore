@@ -34,6 +34,13 @@ const VipPendingSchema = new mongoose.Schema(
       },
     ],
 
+    idCardPhoto: {
+      type: String,
+    },
+
+    idCardBack: {
+      type: String,
+    },
     
     profileCompany: {
       type: String,

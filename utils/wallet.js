@@ -18,6 +18,7 @@ exports.walletUpdater = async (type,userId,amount,descreption,appSection) => {
       }),
     });
     const response = await rawResponse.json();
+    console.log('rrreesss>>>>' , response)
     if (response.success) {
       return response;
     }

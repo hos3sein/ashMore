@@ -19,4 +19,8 @@ router.get("/create", C.create);
 
 router.get("/testnotif",C.pushyTest)
 
+router.get('/getMapData' , C.getMap)
+
+router.get('/getdeletedlinemaker/:id' ,protect ,C.getAlldeleted)
+
 module.exports = router;

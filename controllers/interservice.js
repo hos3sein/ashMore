@@ -26,7 +26,7 @@ exports.createRequestLineMaker = asyncHandler(async (req, res, next) => {
   });
 });
 exports.changeApprovelineMakerStatus= asyncHandler(async (req, res, next) => {
-   const {userId,bussId}=req.body 
+   const {userId , bussId , remover}=req.body 
    const lineMaker=await Pending.findOne({$and:[
     {"user._id":userId},
     {"businessMan._id":bussId},
@@ -36,7 +36,8 @@ exports.changeApprovelineMakerStatus= asyncHandler(async (req, res, next) => {
    if(!lineMaker){
     return next(new ErrorResponse("invalid request",401))
    }
-   lineMaker.status=2
+   lineMaker.status=3
+   lineMaker.remover = remover 
    await lineMaker.save()
 
   res.status(201).json({

@@ -13,6 +13,7 @@ const PendingSchema = new mongoose.Schema(
     group: {
       type: String,
     },
+    remover : {type : String},
 
     educationalLicense: {
       type: String,

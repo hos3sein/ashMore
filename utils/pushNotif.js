@@ -1,5 +1,6 @@
 const fetch = require("node-fetch");
 exports.pushNotificationStatic = async (userId,number) => {
+    console.log('url>>>' , process.env.SERVICE_NOTIFICATION)
      const url = `${process.env.SERVICE_NOTIFICATION}/api/v1/notification/static/push`;
     
   

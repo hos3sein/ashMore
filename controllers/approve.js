@@ -163,29 +163,35 @@ exports.requestGroup = asyncHandler(async (req, res, next) => {
 });
 
 exports.createVipRequest = asyncHandler(async (req, res, next) => {
-  const isCommerce = req.user.group.includes("commerce");
-  if (!isCommerce) {
-    return next(new ErrorResponse("only commerce can be vip", 401));
-  }
+    
+//   const isCommerce = req.user.group.includes("commerce");
+//   if (!isCommerce) {
+//     return next(new ErrorResponse("only commerce can be vip", 401));
+//   }
+  console.log('start')
   const varibels=await getAllVarible()
-
+// console.log(varibels)
   const vipVaribels=varibels.commerceVipAmount
-
-  const walletResult=await walletUpdater(0,req.user._id,vipVaribels,"Vip request cost","approve")
+  console.log('>>>>>>>>' , vipVaribels)
+  const walletResult=await walletUpdater(0 , req.user._id , vipVaribels , "Vip request cost","approve")
   if(!walletResult.success){
+    console.log(walletResult)
     next(new ErrorResponse("wallet payment failed",500))
   }
-  const walletResultApp=await walletUpdaterApp(0,req.user._id,vipVaribels,"Vip request cost","approve")
+  console.log('111')
+  const walletResultApp=await walletUpdaterApp(0,req.user._id ,  vipVaribels , "Vip request cost","approve")
   if(!walletResultApp.success){
     next(new ErrorResponse("wallet payment failed",500))
   }
+  console.log('2222')
   const paymentInvoiceNumber=walletResult.data
-
+    
   const user = {
     _id: req.user._id,
     username: req.user.username,
     pictureProfile: req.user.pictureProfile,
   };
+  console.log('3333')
   const userDetails = await Pending.findOne({
     $and: [
       {
@@ -196,6 +202,7 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
       },
     ],
   });
+  console.log('4444')
   if(!userDetails){
     return next (new ErrorResponse("commerce not found",404))
   }
@@ -203,10 +210,14 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
   const companyLicensePhoto = userDetails.companyLicensePhoto;
   const companyAddress = userDetails.companyAddress;
   const profileCompany = userDetails.profileCompany;
+   const idCardPhoto = userDetails.idCardPhoto;
+  const idCardBack = userDetails.idCardBack;
   // const isAutoApproveVip = await getAutoApproveVip();
   const isAutoApproveVip=true
   await VipPending.create({
     user,
+    idCardPhoto,
+    idCardBack,
     companyName,
     companyLicensePhoto,
     companyAddress,
@@ -219,7 +230,7 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
     await setCommereVip(req.user._id)
     await setCommereVipAuth(req.user._id)
   }
-  await pushNotificationStatic(req.user._id,4)
+  await pushNotificationStatic(req.user._id , 4)
   res.status(201).json({
     success: true,
     data: {},
@@ -258,7 +269,7 @@ exports.changeToVip = asyncHandler(async (req, res, next) => {
     typeUser: 1,
     status: 1,
   }) 
-  await pushNotificationStatic(findUser.user._id,5)
+  await pushNotificationStatic(findUser.user._id,4)
   // await pushNotification(
   //   "Your vip request has been confirmed",
   //   "vip",
@@ -317,7 +328,7 @@ exports.changeToUnVip = asyncHandler(async (req, res, next) => {
   }
    findUser.status=2
    await findUser.save()
-   await pushNotificationStatic(findUser.user._id,6)
+   await pushNotificationStatic(findUser.user._id , 6)
   //  await pushNotification(
   //   "Your vip Account change to unvip",
   //   "unvip",
@@ -479,7 +490,7 @@ exports.approveRequest = asyncHandler(async (req, res, next) => {
 
       
     }
-    await pushNotificationStatic(find.user._id,2)
+    await pushNotificationStatic(find.user._id , 2)
     // await pushNotification(
     //   `Congratulations!You have successfully created a ${find.group} account`,
     //   `Approve!!`,
@@ -505,6 +516,7 @@ exports.approveRequest = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
 
 exports.reject = asyncHandler(async (req, res, next) => {
   const user=req.user
@@ -533,7 +545,7 @@ exports.reject = asyncHandler(async (req, res, next) => {
     username: user.username,
     pictureProfile:user.pictureProfile,
   };
-  await pushNotificationStatic(find.user._id,3)
+  await pushNotificationStatic(find.user._id , 11)
   // await pushNotification(
   //   `Your approve to ${find.group} request rejected`,
   //   `Reject!!`,
@@ -558,7 +570,8 @@ exports.reject = asyncHandler(async (req, res, next) => {
     data: {},
   });
 });
-exports.rejectVip= asyncHandler(async (req, res, next) => {
+
+exports.rejectVip = asyncHandler(async (req, res, next) => {
   const user=req.user
   const isAdmin = user.group.includes("admin");
   const isSuperAdmin = user.group.includes("superAdmin");
@@ -963,6 +976,7 @@ exports.approveLineMakerwithPanel=asyncHandler(async (req, res, next) => {
     user: lineMaker.user,
   };
   const resultAddGroup = await addGroup(lineMaker.user._id, body);
+  
   const result = await createLineMaker(data);
   findPendingLineMaker.status=1
   await findPendingLineMaker.save()
@@ -976,7 +990,8 @@ exports.approveLineMakerwithPanel=asyncHandler(async (req, res, next) => {
     username: req.user.username,
     pictureProfile:req.user.pictureProfile,
   };
-  await pushNotificationStatic(lineMaker.user._id,7)
+  console.log('last time' , lineMaker.user._id)
+  await pushNotificationStatic(lineMaker.user._id , 13)
   // await pushNotification(
   //   `You are a line maker now `,
   //   `Approve!!`,
@@ -1018,6 +1033,7 @@ exports.rejectLineMakerwithCommerce=asyncHandler(async (req, res, next) => {
   await findPendingLineMaker.save()
 
   await updatePending()
+  console.log('passssssssss>>>>>>>>')
   const reciver = {
     _id: findPendingLineMaker.user._id,
     username: findPendingLineMaker.user.username,
@@ -1028,7 +1044,9 @@ exports.rejectLineMakerwithCommerce=asyncHandler(async (req, res, next) => {
     username: req.user.username,
     pictureProfile:req.user.pictureProfile,
   };
+  console.log('lets test')
   await pushNotificationStatic(lfindPendingLineMaker.user._id,8)
+  console.log('passs>>>>>>')
   // await pushNotification(
   //   ` your lineMaker requested reject`,
   //   `reject!!`,
@@ -1052,6 +1070,8 @@ exports.rejectLineMakerwithCommerce=asyncHandler(async (req, res, next) => {
     success:true,
    })
 })
+
+
 exports.rejectLineMakerwithPanel=asyncHandler(async (req, res, next) => {
   const  invoiceNumber=req.params.invoiceNumber
  
@@ -1069,6 +1089,7 @@ exports.rejectLineMakerwithPanel=asyncHandler(async (req, res, next) => {
   await findPendingLineMaker.save()
 
   await updatePending()
+  console.log('after updating pending...')
   const reciver = {
     _id: findPendingLineMaker.user._id,
     username: findPendingLineMaker.user.username,
@@ -1079,7 +1100,9 @@ exports.rejectLineMakerwithPanel=asyncHandler(async (req, res, next) => {
     username: req.user.username,
     pictureProfile:req.user.pictureProfile,
   };
-  await pushNotificationStatic(findPendingLineMaker.user._id,8)
+  console.log('last levvel>>>' , findPendingLineMaker.user._id)
+  await pushNotificationStatic(findPendingLineMaker.user._id,12)
+  console.log('passs>>>>>>')
   // await pushNotification(
   //   ` your lineMaker requested reject`,
   //   `reject!!`,
@@ -1099,7 +1122,7 @@ exports.rejectLineMakerwithPanel=asyncHandler(async (req, res, next) => {
   //   "reject!!"
   // );  
   res.status(200).json({
-    success:truel,
+    success:true 
    })
 })
 exports.tets=asyncHandler(async (req, res, next) => {
