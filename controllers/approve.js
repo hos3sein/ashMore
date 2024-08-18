@@ -30,11 +30,14 @@ exports.requestGroup = asyncHandler(async (req, res, next) => {
   // const isAutoApprove = await getAutoApprove();
    const isAutoApprove = false
  
-  const findFirst = await Pending.find({
+  const findFirst = await Pending.findOne({
     $and: [{ "user._id": req.user._id }, { group: req.body.group }],
   });
-  if (findFirst.length) {
-    return next(new ErrorResponse("You have already requested", 401));
+  
+  if (findFirst) {
+    if (findFirst.status == 0 || findFirst.status == 1){
+        return next(new ErrorResponse("You have already requested", 401));    
+  }
   }
    
   const user = {
@@ -174,8 +177,10 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
   const vipVaribels=varibels.commerceVipAmount
   console.log('>>>>>>>>' , vipVaribels)
   const walletResult=await walletUpdater(0 , req.user._id , vipVaribels , "Vip request cost","approve")
+  console.log('><><><><>')
+  console.log(walletResult)
   if(!walletResult.success){
-    console.log(walletResult)
+    console.log('user wallet has no money')
     next(new ErrorResponse("wallet payment failed",500))
   }
   console.log('111')
@@ -190,6 +195,7 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
     _id: req.user._id,
     username: req.user.username,
     pictureProfile: req.user.pictureProfile,
+    phone : req.user.phone
   };
   console.log('3333')
   const userDetails = await Pending.findOne({
@@ -399,6 +405,7 @@ exports.checkBussCommerceIsVipPanel=asyncHandler(async (req, res, next) => {
     data: commerce.isVip,
   });
 });
+
 
 // ADMIN
 // OK
@@ -625,6 +632,8 @@ exports.rejectVip = asyncHandler(async (req, res, next) => {
 });
 
 
+
+
 exports.allPending = asyncHandler(async (req, res, next) => {
   const user=req.user
   const isAdmin = user.group.includes("admin");
@@ -632,12 +641,16 @@ exports.allPending = asyncHandler(async (req, res, next) => {
   if(!isAdmin&&!isSuperAdmin){
     return next(new ErrorResponse("you dont have access to this route ",401))
   }
-  const all = await Pending.find({ status: 0 });
+  const allCommerce = await Pending.find({$and:[{group : "commerce"},{ status: 0 }]});
+  const allTransport = await Pending.find({$and:[{group : "transport"} , { status: 0 }]});
   res.status(200).json({
     success: true,
-    data: all,
+    commerce : allCommerce,
+    allTransport : allTransport,
   });
 });
+
+
 
 exports.allVipPending= asyncHandler(async (req, res, next) => {
   const user=req.user
@@ -758,7 +771,6 @@ exports.addLineMaker=asyncHandler(async (req, res, next) => {
    res.status(201).json({
     success:true,
    })
-  
 });
 
 exports.lineMakerApproveRequest=asyncHandler(async (req, res, next) => {
@@ -837,7 +849,6 @@ exports.getAddLineMakerQrForBuss=asyncHandler(async (req, res, next) => {
 
 
 exports.getPendinglineMakerForCommerce=asyncHandler(async (req, res, next) => {
-   
   const findPendingLineMaker=await Pending.find({$and:[
     {"businessMan._id":req.user._id},
     {status:0},
