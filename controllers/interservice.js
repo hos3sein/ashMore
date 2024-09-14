@@ -25,8 +25,11 @@ exports.createRequestLineMaker = asyncHandler(async (req, res, next) => {
     data: {},
   });
 });
+
+
 exports.changeApprovelineMakerStatus= asyncHandler(async (req, res, next) => {
    const {userId , bussId , remover}=req.body 
+   console.log(req.body)
    const lineMaker=await Pending.findOne({$and:[
     {"user._id":userId},
     {"businessMan._id":bussId},

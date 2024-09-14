@@ -61,7 +61,10 @@ app.use(helmet());
 app.use(xss());
 // Prevent http param pollution
 app.use(hpp());
-app.use(cors());
+app.use(cors({
+    credentials: true,
+    origin: "*"
+}));
 // Set static folder
 var public = path.join(__dirname, "public");
 app.use(express.static(public));

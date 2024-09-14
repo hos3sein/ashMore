@@ -32,6 +32,8 @@ router.get("/rejectlinemakerrequest/:invoiceNumber",protect, C.rejectLineMakerwi
 
 router.get("/rejectlinemakerrequestadmin/:invoiceNumber",protect, C.rejectLineMakerwithPanel);
 
+router.get("/getHistory",protect, C.getAllRejected);
+
 router.get("/reject/:invoiceNumber",protect, C.reject);
 
 router.get("/rejectvip/:invoiceNumber",protect, C.rejectVip);

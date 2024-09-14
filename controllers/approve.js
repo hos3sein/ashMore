@@ -22,12 +22,14 @@ const {
   updatePending,
   setCommereVipAuth,
   unSetCommereVipAuth,
-  getAllVarible
+  getAllVarible,
+  newLog
 } = require("../utils/request");
 
 // ! OK
 exports.requestGroup = asyncHandler(async (req, res, next) => {
   // const isAutoApprove = await getAutoApprove();
+  console.log('req.body' , req.body)
    const isAutoApprove = false
  
   const findFirst = await Pending.findOne({
@@ -161,7 +163,7 @@ exports.requestGroup = asyncHandler(async (req, res, next) => {
   // );
   res.status(200).json({
     success: true,
-    data: {},
+    data: create,
   });
 });
 
@@ -219,7 +221,7 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
    const idCardPhoto = userDetails.idCardPhoto;
   const idCardBack = userDetails.idCardBack;
   // const isAutoApproveVip = await getAutoApproveVip();
-  const isAutoApproveVip=true
+  const isAutoApproveVip=false
   await VipPending.create({
     user,
     idCardPhoto,
@@ -242,6 +244,7 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
     data: {},
   });
 });
+
 
 exports.changeToVip = asyncHandler(async (req, res, next) => {
   const user=req.user
@@ -275,6 +278,8 @@ exports.changeToVip = asyncHandler(async (req, res, next) => {
     typeUser: 1,
     status: 1,
   }) 
+  await setCommereVip(findUser.user._id)
+  await setCommereVipAuth(findUser.user._id)
   await pushNotificationStatic(findUser.user._id,4)
   // await pushNotification(
   //   "Your vip request has been confirmed",
@@ -294,11 +299,21 @@ exports.changeToVip = asyncHandler(async (req, res, next) => {
   //   "vip",
   //   "vip"
   // );
+  const Log = {
+    admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole , group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+    section : "Approve",
+    part : "Approve Vip membership",
+    success : true,
+    description : `${req.user.username} successfully Approved user: ${create.user.username}`,
+  }
+  await newLog(Log)
   res.status(200).json({
     success: true,
     data: {},
   });
 });
+
+
 
 exports.changeToUnVip = asyncHandler(async (req, res, next) => {
   const user=req.user
@@ -353,6 +368,14 @@ exports.changeToUnVip = asyncHandler(async (req, res, next) => {
   //   "unvip",
   //   "unvip"
   // );
+  const Log = {
+    admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole , group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+    section : "Approve",
+    part : "reject",
+    success : true,
+    description : `${req.user.username} successfully reject user: ${findUser.user.username}`,
+  }
+  await newLog(Log)
   res.status(200).json({
     success: true,
     data: {},
@@ -463,7 +486,14 @@ exports.approveRequest = asyncHandler(async (req, res, next) => {
       };
 
       const resultCreateTruck = await createTruck(data);
-      
+       const Log = {
+      admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+      section : "Approve",
+      part : "Approve user request",
+      success : true,
+      description : `${req.user.username} successfully approve truck request of user: ${find.user.username}`,
+    }
+    await newLog(Log)
     }
 
     if (find.group == "commerce") {
@@ -479,6 +509,14 @@ exports.approveRequest = asyncHandler(async (req, res, next) => {
       };
 
       const resultCreateTruck = await createBussinessMan(data);
+       const Log = {
+      admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+      section : "Approve",
+      part : "Approve user request",
+      success : true,
+      description : `${req.user.username} successfully approve commerce request of user: ${find.user.username}`,
+    }
+    await newLog(Log)
     }
 
     if (find.group == "transport") {
@@ -494,6 +532,15 @@ exports.approveRequest = asyncHandler(async (req, res, next) => {
       };
 
       const resultCreateTruck = await createTransport(data);
+      
+       const Log = {
+      admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+      section : "Approve",
+      part : "Approve user request",
+      success : true,
+      description : `${req.user.username} successfully approve transport request of user: ${find.user.username}`,
+    }
+    await newLog(Log)
 
       
     }
@@ -516,13 +563,34 @@ exports.approveRequest = asyncHandler(async (req, res, next) => {
     //   "Approve",
     //   "Approve"
     // );
-
+   
     res.status(200).json({
       success: true,
       data: {},
     });
   }
 });
+
+
+
+exports.getAllRejected = asyncHandler(async(req , res , next)=>{
+  const request = await Pending.find({status : 2})
+  const request2 = await Pending.find({status : 1})
+  const vipRequests = await VipPending.find({status : 2})
+  const vipApproved = await VipPending.find({status : 1})
+
+  res.status(200).json({
+    success : true,
+    data : {
+      rejected : request,
+      vipRejected : vipRequests,
+      approved : request2,
+      vipApproved : vipApproved
+    }
+  })
+})
+
+
 
 
 exports.reject = asyncHandler(async (req, res, next) => {
@@ -571,7 +639,14 @@ exports.reject = asyncHandler(async (req, res, next) => {
   //   "Reject!!",
   //   "Reject!!"
   // );
-
+  const Log = {
+    admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+    section : "Approve",
+    part : "reject user request",
+    success : true,
+    description : `${req.user.username} successfully reject ${find.group} request of user: ${find.user.username}`,
+  }
+  await newLog(Log)
   res.status(200).json({
     success: true,
     data: {},
@@ -625,6 +700,16 @@ exports.rejectVip = asyncHandler(async (req, res, next) => {
   //   "Reject!!",
   //   "Reject!!"
   // );  
+  await unSetCommereVipAuth(find.user._id)
+  await unSetCommereVip(find.user._id)
+  const Log = {
+    admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole , group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+    section : "Approve",
+    part : "reject vip request",
+    success : true,
+    description : `${req.user.username} successfully reject vip request of user: ${find.user.username}`,
+  }
+  await newLog(Log)
   res.status(200).json({
     success: true,
     data: {},
@@ -641,14 +726,38 @@ exports.allPending = asyncHandler(async (req, res, next) => {
   if(!isAdmin&&!isSuperAdmin){
     return next(new ErrorResponse("you dont have access to this route ",401))
   }
-  const allCommerce = await Pending.find({$and:[{group : "commerce"},{ status: 0 }]});
-  const allTransport = await Pending.find({$and:[{group : "transport"} , { status: 0 }]});
+
+  const allCommercePendings = await Pending.find({group : "commerce" ,status : 0})
+  const allCommerceApproved = await Pending.find({group : "commerce" ,status : 1})
+  const allCommerceRejected = await Pending.find({group : "commerce" ,status : 2})
+
+  const allTruckPendings = await Pending.find({group : "truck" , status : 0})
+  const allTruckApproved = await Pending.find({group : "truck" ,status : 1})
+  const allTruckRejected = await Pending.find({group : "truck" ,status : 2})
+
+  const allshipingPendings = await Pending.find({group : "transport" , status : 0})
+  const allshipingApproved = await Pending.find({group : "transport" ,status : 1})
+  const allshipingRejected = await Pending.find({group : "transport" ,status : 2})
+
+  console.log('><><><><><>',allTruckPendings)
   res.status(200).json({
     success: true,
-    commerce : allCommerce,
-    allTransport : allTransport,
+    data : {
+      allCommercePendings : allCommercePendings,
+      allCommerceApproved : allCommerceApproved,
+      allCommerceRejected : allCommerceRejected,
+      allTruckPendings : allTruckPendings,
+      allTruckApproved : allTruckApproved,
+      allTruckRejected : allTruckRejected,
+      allshipingPendings : allshipingPendings,
+      allshipingApproved : allshipingApproved,
+      allshipingRejected : allshipingRejected
+    }
   });
 });
+
+
+
 
 
 
@@ -661,12 +770,22 @@ exports.allVipPending= asyncHandler(async (req, res, next) => {
   }
 
   // const allVip = await VipPending.find({ status: 0 });
-  const allVip = await VipPending.find({ status: 1 });
+  const allVipPendings = await VipPending.find({ status: 0 });
+  const allViprejected = await VipPending.find({ status: 2 });
+  const allVipApproved = await VipPending.find({ status: 1 });
+  
   res.status(200).json({
     success: true,
-    data: allVip,
+    data: {
+      allVipPendings :allVipPendings,
+      allViprejected : allViprejected,
+      allVipApproved : allVipApproved,
+    },
   });
 });
+
+
+
 exports.getAllInfoAboutUserApprove=asyncHandler(async (req, res, next) => {
   const user=req.user
   const isAdmin = user.group.includes("admin");
@@ -1021,7 +1140,14 @@ exports.approveLineMakerwithPanel=asyncHandler(async (req, res, next) => {
   //   "Approve!!",
   //   "Approve!!"
   // );  
-
+  const Log = {
+    admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+    section : "Approve",
+    part : "Approve linemaker request",
+    success : true,
+    description : `${req.user.username} successfully approved linemaker request of user: ${findPendingLineMaker.user.username}`,
+  }
+  await newLog(Log)
   res.status(200).json({
     success:true,
    })
@@ -1095,7 +1221,7 @@ exports.rejectLineMakerwithPanel=asyncHandler(async (req, res, next) => {
   }
 
   const lineMaker=findPendingLineMaker
-  findPendingLineMaker.status=2
+  findPendingLineMaker.status=3
 
   await findPendingLineMaker.save()
 
@@ -1132,6 +1258,14 @@ exports.rejectLineMakerwithPanel=asyncHandler(async (req, res, next) => {
   //   "reject!!",
   //   "reject!!"
   // );  
+  const Log = {
+    admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+    section : "Approve",
+    part : "reject linemaker request",
+    success : true,
+    description : `${req.user.username} successfully reject linemaker request of user: ${findPendingLineMaker.user.username}`,
+  }
+  await newLog(Log)
   res.status(200).json({
     success:true 
    })
