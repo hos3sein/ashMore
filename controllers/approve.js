@@ -23,13 +23,22 @@ const {
   setCommereVipAuth,
   unSetCommereVipAuth,
   getAllVarible,
-  newLog
+  newLog,getUSER
 } = require("../utils/request");
 
 // ! OK
 exports.requestGroup = asyncHandler(async (req, res, next) => {
   // const isAutoApprove = await getAutoApprove();
   console.log('req.body' , req.body)
+  const validate1 = getUSER(req.user._id)
+   if (!validate1.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+   }
    const isAutoApprove = false
  
   const findFirst = await Pending.findOne({
@@ -173,6 +182,15 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
 //   if (!isCommerce) {
 //     return next(new ErrorResponse("only commerce can be vip", 401));
 //   }
+const validate1 = getUSER(req.user._id)
+   if (!validate1.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+   }
   console.log('start')
   const varibels=await getAllVarible()
 // console.log(varibels)
@@ -186,7 +204,7 @@ exports.createVipRequest = asyncHandler(async (req, res, next) => {
     next(new ErrorResponse("wallet payment failed",500))
   }
   console.log('111')
-  const walletResultApp=await walletUpdaterApp(0,req.user._id ,  vipVaribels , "Vip request cost","approve")
+  const walletResultApp=await walletUpdaterApp(1,req.user._id ,  vipVaribels , "Vip request cost","approve")
   if(!walletResultApp.success){
     next(new ErrorResponse("wallet payment failed",500))
   }
@@ -258,6 +276,15 @@ exports.changeToVip = asyncHandler(async (req, res, next) => {
   const findUser = await VipPending.findOne({
     invoiceNumber: req.params.invoiceNumber,
   });
+  const validate1 = getUSER(findUser.user._id)
+   if (!validate1.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+   }
   if (!findUser) {
     return next(new ErrorResponse("user not found", 401));
   }
@@ -445,6 +472,15 @@ exports.approveRequest = asyncHandler(async (req, res, next) => {
   if(!find){
     return next(new ErrorResponse("Approve request not found",404))
   }
+   const validate1 = getUSER(find.user._id)
+   if (!validate1.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+   }
   // const reciver = {
   //   _id: find.user._id,
   //   username: find.user.username,
@@ -840,6 +876,15 @@ exports.addLineMaker=asyncHandler(async (req, res, next) => {
     username: req.user.username,
     pictureProfile: req.user.pictureProfile,
   }
+  const validate1 = getUSER(bussId)
+  if (!validate1.data.isAvtive){
+   return res.status(401).json({
+     success : false,
+     payload : {
+       error : 'user is not active please contact with admin!!'
+     }
+   })
+  }
     const createZ = await Pending.create({
       user,
       group,
@@ -900,6 +945,15 @@ exports.lineMakerApproveRequest=asyncHandler(async (req, res, next) => {
    if(!findBuss.isVip){
     return next(new ErrorResponse("Buss not Vip",401))
    }
+    const validate1 = getUSER(findBuss.user._id)
+  if (!validate1.data.isAvtive){
+   return res.status(401).json({
+     success : false,
+     payload : {
+       error : 'user is not active please contact with admin!!'
+     }
+   })
+  }
    console.log(req.user);
    const user = {
     _id: req.user._id,
@@ -919,6 +973,15 @@ exports.lineMakerApproveRequest=asyncHandler(async (req, res, next) => {
       message:"You already requested"
     })
    }
+   const validate2 = getUSER(check.user._id)
+  if(!validate2.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+  }
    const initLineMaker = await Pending.create({
     user,
     group:"lineMaker",
@@ -953,7 +1016,15 @@ exports.getAddLineMakerQrForBuss=asyncHandler(async (req, res, next) => {
     return next(new ErrorResponse("Buss not found",404))
    }
    console.log(buss);
-
+    const validate1 = getUSER(buss.user._id)
+   if (!validate1.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+   }
    if(process.env.APP_TYPE=="main"){
      qrUrl=`http://120.27.129.194:8003/api/v1/approve/approvelinemaker/${buss.addLineMakerQrCode}`
 
@@ -1008,6 +1079,15 @@ exports.getPendinglineMakerForAdmin=asyncHandler(async (req, res, next) => {
 })
 
 exports.approveLineMakerwithCommerce=asyncHandler(async (req, res, next) => {
+    const validate1 = getUSER(req.user._id)
+   if (!validate1.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+   }
   const  invoiceNumber=req.params.invoiceNumber
   const body = {
     group:"lineMaker",
@@ -1022,6 +1102,15 @@ exports.approveLineMakerwithCommerce=asyncHandler(async (req, res, next) => {
   ]})
   if(!findPendingLineMaker){
     return next(new ErrorResponse("Request not found",404))
+  }
+  const validate2 = getUSER(findPendingLineMaker.user._id)
+  if(!validate2.data.isAvtive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
   }
   const lineMaker=findPendingLineMaker
   const data = {
@@ -1094,6 +1183,16 @@ exports.approveLineMakerwithPanel=asyncHandler(async (req, res, next) => {
   if(!findPendingLineMaker){
     return next(new ErrorResponse("Request not found",404))
   }
+  const validate1 = getUSER(findPendingLineMaker.user._id)
+  const validate2 = getUSER(findPendingLineMaker.businessMan._id)
+   if (!validate1.data.isAvtive || !validate2.data.isActive){
+    return res.status(401).json({
+      success : false,
+      payload : {
+        error : 'user is not active please contact with admin!!'
+      }
+    })
+   }
   const lineMaker=findPendingLineMaker
   const data = {
     group:"lineMaker",
